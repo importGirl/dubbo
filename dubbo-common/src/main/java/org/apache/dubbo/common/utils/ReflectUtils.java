@@ -165,6 +165,11 @@ public final class ReflectUtils {
                 || Number.class.isAssignableFrom(cls) || Date.class.isAssignableFrom(cls);
     }
 
+    /**
+     * 基本类型->包装类
+     * @param c
+     * @return
+     */
     public static Class<?> getBoxedClass(Class<?> c) {
         if (c == int.class) {
             c = Integer.class;

@@ -27,7 +27,7 @@ import static org.apache.dubbo.config.Constants.PROTOCOLS_SUFFIX;
 
 /**
  * ProtocolConfig
- *
+ * <dubbo:protocol name="dubbo" port="11101" threadpool="cached" threads="${dubbo.provider.threads}" />
  * @export
  */
 public class ProtocolConfig extends AbstractConfig {

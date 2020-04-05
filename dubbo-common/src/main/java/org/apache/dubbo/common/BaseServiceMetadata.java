@@ -41,6 +41,11 @@ public class BaseServiceMetadata {
         return buf.toString();
     }
 
+    /**
+     *  返回版本号
+     * @param serviceKey local/getUserId:1.0.0
+     * @return 1.0.0
+     */
     public static String versionFromServiceKey(String serviceKey) {
         int index = serviceKey.indexOf(":");
         if (index == -1) {
@@ -57,6 +62,11 @@ public class BaseServiceMetadata {
         return serviceKey.substring(0, index);
     }
 
+    /**
+     *  返回接口名（interfaceName)
+      * @param serviceKey local/getUserId:1.0.0
+     * @return getUserId
+     */
     public static String interfaceFromServiceKey(String serviceKey) {
         int groupIndex = serviceKey.indexOf("/");
         int versionIndex = serviceKey.indexOf(":");

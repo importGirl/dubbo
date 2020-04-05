@@ -128,6 +128,7 @@ public class ProviderModel {
     /* *************** Start, metadata compatible **************** */
 
     private ServiceMetadata serviceMetadata;
+    // key::methodName = value::overideMethods(重载方法集合)
     private final Map<String, List<ProviderMethodModel>> methods = new HashMap<String, List<ProviderMethodModel>>();
 
     public ProviderModel(String serviceKey,
@@ -179,6 +180,10 @@ public class ProviderModel {
         return resultList == null ? Collections.emptyList() : resultList;
     }
 
+    /**
+     * 初始化methods
+     * @param serviceInterfaceClass
+     */
     private void initMethod(Class<?> serviceInterfaceClass) {
         Method[] methodsToExport;
         methodsToExport = serviceInterfaceClass.getMethods();

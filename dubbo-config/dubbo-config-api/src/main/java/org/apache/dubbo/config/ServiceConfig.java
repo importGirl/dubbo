@@ -101,6 +101,10 @@ import static org.apache.dubbo.rpc.Constants.SCOPE_REMOTE;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.EXPORT_KEY;
 
+/**
+ * 	<dubbo:service interface="com.max.spaceAge.client.SpaceAgeService" ref="spaceAgeServiceImpl"/>
+ * @param <T>
+ */
 public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     public static final Logger logger = LoggerFactory.getLogger(ServiceConfig.class);
@@ -176,7 +180,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
         unexported = true;
 
-        // dispatch a ServiceConfigUnExportedEvent since 2.7.4
+        // dispatch a ServiceConfigUnExportedEvent since 2.7.4；发送事件
         dispatch(new ServiceConfigUnexportedEvent(this));
     }
 
@@ -200,9 +204,12 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         serviceMetadata.setServiceInterfaceName(getInterface());
         serviceMetadata.setTarget(getRef());
 
+        // 延迟暴露
         if (shouldDelay()) {
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
-        } else {
+        }
+        // 立即暴露
+        else {
             doExport();
         }
 
@@ -284,7 +291,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         postProcessConfig();
     }
 
-
+    /**
+     * 暴露服务
+     */
     protected synchronized void doExport() {
         if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
@@ -300,10 +309,16 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         doExportUrls();
     }
 
+    /**
+     * 暴露URL
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
+        //
         ServiceRepository repository = ApplicationModel.getServiceRepository();
+        // 注册服务; serviceDescriptor
         ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
+        // 注册提供者；providerModel
         repository.registerProvider(
                 getUniqueServiceName(),
                 ref,
@@ -311,10 +326,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 this,
                 serviceMetadata
         );
-
+        // 根据注册中心address 创建URL
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
-
+        //
         for (ProtocolConfig protocolConfig : protocols) {
+            //
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
                     .map(p -> p + "/" + path)
                     .orElse(path), group, version);
@@ -326,12 +342,17 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
     }
 
+    /**
+     *
+     * @param protocolConfig
+     * @param registryURLs
+     */
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
         }
-
+        // 获取参数map; metries,application,module,provider,protocolconfig,serviceconfig
         Map<String, String> map = new HashMap<String, String>();
         map.put(SIDE_KEY, PROVIDER_SIDE);
 
@@ -348,6 +369,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
         }
+        // 获取参数map; mehtods,
         if (CollectionUtils.isNotEmpty(getMethods())) {
             for (MethodConfig method : getMethods()) {
                 AbstractConfig.appendParameters(map, method, method.getName());
@@ -358,6 +380,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         map.put(method.getName() + ".retries", "0");
                     }
                 }
+                // 获取参数map; ArgumentConfig,
                 List<ArgumentConfig> arguments = method.getArguments();
                 if (CollectionUtils.isNotEmpty(arguments)) {
                     for (ArgumentConfig argument : arguments) {
@@ -404,6 +427,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             } // end of methods for
         }
 
+        // generice,methods,reversion
         if (ProtocolUtils.isGeneric(generic)) {
             map.put(GENERIC_KEY, generic);
             map.put(METHODS_KEY, ANY_VALUE);
@@ -425,6 +449,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         /**
          * Here the token value configured by the provider is used to assign the value to ServiceConfig#token
          */
+        // token 验证
         if(ConfigUtils.isEmpty(token) && provider != null) {
             token = provider.getToken();
         }
@@ -439,12 +464,13 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         //init serviceMetadata attachments
         serviceMetadata.getAttachments().putAll(map);
 
-        // export service
+        // export service; host,post
         String host = findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = findConfigedPorts(protocolConfig, name, map);
+        // 创建 URL 对象
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
-        // You can customize Configurator to append extra parameters
+        // You can customize Configurator to append extra parameters； 配置规则
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                 .hasExtension(url.getProtocol())) {
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
@@ -543,6 +569,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
 
     /**
+     * 查找 host
      * Register & bind IP address for service provider, can be configured separately.
      * Configuration priority: environment variables -> java system properties -> host property in config file ->
      * /etc/hosts -> default network address -> first available network address
@@ -557,6 +584,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                                      Map<String, String> map) {
         boolean anyhost = false;
 
+        // host
         String hostToBind = getValueFromConfig(protocolConfig, DUBBO_IP_TO_BIND);
         if (hostToBind != null && hostToBind.length() > 0 && isInvalidLocalHost(hostToBind)) {
             throw new IllegalArgumentException("Specified invalid bind ip from property:" + DUBBO_IP_TO_BIND + ", value:" + hostToBind);
@@ -564,6 +592,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         // if bind ip is not found in environment, keep looking up
         if (StringUtils.isEmpty(hostToBind)) {
+            // protocolConfig获取
             hostToBind = protocolConfig.getHost();
             if (provider != null && StringUtils.isEmpty(hostToBind)) {
                 hostToBind = provider.getHost();
@@ -571,6 +600,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             if (isInvalidLocalHost(hostToBind)) {
                 anyhost = true;
                 try {
+                    // 使用InetAddress 获取
                     logger.info("No valid ip found from environment, try to find valid host from DNS.");
                     hostToBind = InetAddress.getLocalHost().getHostAddress();
                 } catch (UnknownHostException e) {
@@ -583,6 +613,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                                 // skip multicast registry since we cannot connect to it via Socket
                                 continue;
                             }
+                            // 使用 socket 获取 host
                             try (Socket socket = new Socket()) {
                                 SocketAddress addr = new InetSocketAddress(registryURL.getHost(), registryURL.getPort());
                                 socket.connect(addr, 1000);
@@ -594,6 +625,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         }
                     }
                     if (isInvalidLocalHost(hostToBind)) {
+                        // 使用属性或者NetworkInterface 获取host
                         hostToBind = getLocalHost();
                     }
                 }
@@ -602,7 +634,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         map.put(BIND_IP_KEY, hostToBind);
 
-        // registry ip is not used for bind ip by default
+        // registry ip is not used for bind ip by default; 注册中心的host
         String hostToRegistry = getValueFromConfig(protocolConfig, DUBBO_IP_TO_REGISTRY);
         if (hostToRegistry != null && hostToRegistry.length() > 0 && isInvalidLocalHost(hostToRegistry)) {
             throw new IllegalArgumentException("Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
@@ -618,6 +650,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
 
     /**
+     * 查找port
      * Register port and bind port for the provider, can be configured separately
      * Configuration priority: environment variable -> java system properties -> port property in protocol config file
      * -> protocol default port
@@ -683,6 +716,12 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         return port;
     }
 
+    /**
+     * 获取配置value从 config对象
+     * @param protocolConfig
+     * @param key
+     * @return
+     */
     private String getValueFromConfig(ProtocolConfig protocolConfig, String key) {
         String protocolPrefix = protocolConfig.getName().toUpperCase() + "_";
         String value = ConfigUtils.getSystemProperty(protocolPrefix + key);

@@ -26,20 +26,20 @@ import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE;
 import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE_ASYNC;
 
 /**
- *
+ * 方法描述器
  */
 public class MethodDescriptor {
     private final Method method;
     //    private final boolean isCallBack;
 //    private final boolean isFuture;
-    private final String paramDesc;
+    private final String paramDesc; // [int.class, boolean[].class, Object.class] => "I[ZLjava/lang/Object;"
     // duplicate filed as paramDesc, but with different format.
-    private final String[] compatibleParamSignatures;
-    private final Class<?>[] parameterClasses;
-    private final Class<?> returnClass;
-    private final Type[] returnTypes;
-    private final String methodName;
-    private final boolean generic;
+    private final String[] compatibleParamSignatures;   // 参数对象类型名称
+    private final Class<?>[] parameterClasses;  // 参数对象类型
+    private final Class<?> returnClass; // 返回对象类型
+    private final Type[] returnTypes;   // 返回类型
+    private final String methodName;    // 方法名
+    private final boolean generic;      // 是否代理方法
 
     public MethodDescriptor(Method method) {
         this.method = method;

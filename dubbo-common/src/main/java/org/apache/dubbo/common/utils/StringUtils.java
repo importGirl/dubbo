@@ -817,6 +817,13 @@ public final class StringUtils {
         return buf.toString();
     }
 
+    /**
+     * 用分隔符分割驼峰命名法
+     * 例子： userName -> user.name
+     * @param camelName
+     * @param split
+     * @return
+     */
     public static String camelToSplitName(String camelName, String split) {
         if (isEmpty(camelName)) {
             return camelName;

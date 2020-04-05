@@ -37,16 +37,16 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
 
     public static final String NAME = "repository";
 
-    // services
+    // services; key::interfaceName(接口名） = value::ServiceDescriptor
     private ConcurrentMap<String, ServiceDescriptor> services = new ConcurrentHashMap<>();
 
-    // consumers
+    // consumers； key::group/getUserId:1.0.0 = value::ConsumerModel（消费者对象）
     private ConcurrentMap<String, ConsumerModel> consumers = new ConcurrentHashMap<>();
 
-    // providers
+    // providers； key::group/getUserId:1.0.0 = value::提供者对象
     private ConcurrentMap<String, ProviderModel> providers = new ConcurrentHashMap<>();
 
-    // useful to find a provider model quickly with serviceInterfaceName:version
+    // useful to find a provider model quickly with serviceInterfaceName:version；key::getUserId:1.0.0 = value::提供者
     private ConcurrentMap<String, ProviderModel> providersWithoutGroup = new ConcurrentHashMap<>();
 
     public ServiceRepository() {
@@ -59,6 +59,11 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
         }
     }
 
+    /**
+     * 注册服务; 缓存到Map中
+     * @param interfaceClazz
+     * @return
+     */
     public ServiceDescriptor registerService(Class<?> interfaceClazz) {
         return services.computeIfAbsent(interfaceClazz.getName(),
                 _k -> new ServiceDescriptor(interfaceClazz));
@@ -85,6 +90,14 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
         return serviceDescriptor;
     }
 
+    /**
+     * 注册消费者
+     * @param serviceKey
+     * @param serviceDescriptor
+     * @param rc
+     * @param proxy
+     * @param serviceMetadata
+     */
     public void registerConsumer(String serviceKey,
                                  ServiceDescriptor serviceDescriptor,
                                  ReferenceConfigBase<?> rc,
@@ -103,17 +116,34 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
 
     }
 
+    /**
+     * 注册提供者 ProviderModel
+     * - 初始化providers、providersWithoutGroup
+      * @param serviceKey
+     * @param serviceInstance
+     * @param serviceModel
+     * @param serviceConfig
+     * @param serviceMetadata
+     */
     public void registerProvider(String serviceKey,
                                  Object serviceInstance,
                                  ServiceDescriptor serviceModel,
                                  ServiceConfigBase<?> serviceConfig,
                                  ServiceMetadata serviceMetadata) {
+        // 创建 providerModel
         ProviderModel providerModel = new ProviderModel(serviceKey, serviceInstance, serviceModel, serviceConfig,
                 serviceMetadata);
+        // 缓存ProviderModel 到 providers Map
         providers.putIfAbsent(serviceKey, providerModel);
+        // 缓存ProviderModel 到 providerWithoutGroup Map
         providersWithoutGroup.putIfAbsent(keyWithoutGroup(serviceKey), providerModel);
     }
 
+    /**
+     * 返回 interfaceName + : + version; 去掉分组
+     * @param serviceKey
+     * @return getUserId:1.0.0
+     */
     private static String keyWithoutGroup(String serviceKey) {
         return interfaceFromServiceKey(serviceKey) + ":" + versionFromServiceKey(serviceKey);
     }

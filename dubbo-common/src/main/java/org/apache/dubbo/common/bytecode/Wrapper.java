@@ -99,7 +99,7 @@ public abstract class Wrapper {
 
     /**
      * get wrapper.
-     *
+     * 动态创建包装类
      * @param c Class instance.
      * @return Wrapper instance(not null).
      */
@@ -111,11 +111,16 @@ public abstract class Wrapper {
 
         if (c == Object.class) {
             return OBJECT_WRAPPER;
-        }
 
+        }
         return WRAPPER_MAP.computeIfAbsent(c, key -> makeWrapper(key));
     }
 
+    /**
+     * 动态创建class 的包装类
+     * @param c
+     * @return
+     */
     private static Wrapper makeWrapper(Class<?> c) {
         if (c.isPrimitive()) {
             throw new IllegalArgumentException("Can not create wrapper for primitive type: " + c);

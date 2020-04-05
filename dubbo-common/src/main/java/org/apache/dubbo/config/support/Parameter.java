@@ -24,25 +24,34 @@ import java.lang.annotation.Target;
 
 /**
  * Parameter
+ * 用于dubbo URL 参数的拼接
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface Parameter {
 
+    /** 键（别名） */
     String key() default "";
 
+    /** 是否必填 */
     boolean required() default false;
 
+    /** 是否忽略 */
     boolean excluded() default false;
 
+    /** 是否转义；URL.encode() */
     boolean escaped() default false;
 
+    /** 是否为属性 */
     boolean attribute() default false;
 
+    /** 是否拼接属性；key=value1,value2 */
     boolean append() default false;
 
     /**
+     * true-获取property时使用key()获取， false-使用原名称获取
+     *
      * if {@link #key()} is specified, it will be used as the key for the annotated property when generating url.
      * by default, this key will also be used to retrieve the config value:
      * <pre>

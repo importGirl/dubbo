@@ -53,6 +53,7 @@ public final class Version {
      * performance than string.
      */
     private static final int LOWEST_VERSION_FOR_RESPONSE_ATTACHMENT = 2000200; // 2.0.2
+    // key::version（Str) = value::version(int); 1.0.0 = 100000
     private static final Map<String, Integer> VERSION2INT = new HashMap<String, Integer>();
 
     static {
@@ -114,6 +115,11 @@ public final class Version {
         return iVersion >= LOWEST_VERSION_FOR_RESPONSE_ATTACHMENT;
     }
 
+    /**
+     * 返回int类型版本号
+     * @param version
+     * @return
+     */
     public static int getIntVersion(String version) {
         Integer v = VERSION2INT.get(version);
         if (v == null) {
@@ -155,6 +161,16 @@ public final class Version {
         return "";
     }
 
+    /**
+     * 返回version;
+     * - package获取
+     * - codeSource获取
+     * - file获取
+     *
+     * @param cls
+     * @param defaultVersion
+     * @return
+     */
     public static String getVersion(Class<?> cls, String defaultVersion) {
         try {
             // find version info from MANIFEST.MF first
@@ -195,6 +211,7 @@ public final class Version {
 
     /**
      * get version from file: path/to/group-module-x.y.z.jar, returns x.y.z
+     * example: spring-boot-starter-1.5.10.RELEASE.jar -> 1.5.10.RELEASE
      */
     private static String getFromFile(String file) {
         // remove suffix ".jar": "path/to/group-module-x.y.z"

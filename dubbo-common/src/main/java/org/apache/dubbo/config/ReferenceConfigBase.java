@@ -108,9 +108,13 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
             // the def default setting happens in {@link ReferenceBean#afterPropertiesSet}.
             return true;
         }
-        return shouldInit;
+       return shouldInit;
     }
 
+    /**
+     * 初始化 consumer
+     * @throws IllegalStateException
+     */
     public void checkDefault() throws IllegalStateException {
         if (consumer == null) {
             consumer = ApplicationModel.getConfigManager()
@@ -222,25 +226,33 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
         return DUBBO + ".reference." + interfaceName;
     }
 
+    /**
+     * 设置 url； 全限定名称
+     */
     public void resolveFile() {
+        // 系统配置
         String resolve = System.getProperty(interfaceName);
         String resolveFile = null;
         if (StringUtils.isEmpty(resolve)) {
+            // 系统配置
             resolveFile = System.getProperty("dubbo.resolve.file");
             if (StringUtils.isEmpty(resolveFile)) {
+                // dubbo-resolve.properties 文件对象
                 File userResolveFile = new File(new File(System.getProperty("user.home")), "dubbo-resolve.properties");
+                // file绝对路径
                 if (userResolveFile.exists()) {
                     resolveFile = userResolveFile.getAbsolutePath();
                 }
             }
             if (resolveFile != null && resolveFile.length() > 0) {
                 Properties properties = new Properties();
+                // 加载文件中的配置信息到 properties 对象中
                 try (FileInputStream fis = new FileInputStream(new File(resolveFile))) {
                     properties.load(fis);
                 } catch (IOException e) {
                     throw new IllegalStateException("Failed to load " + resolveFile + ", cause: " + e.getMessage(), e);
                 }
-
+                // 再尝试从加载到properties中获取 property
                 resolve = properties.getProperty(interfaceName);
             }
         }

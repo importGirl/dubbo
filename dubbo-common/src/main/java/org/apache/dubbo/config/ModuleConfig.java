@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * The module info
- *
+ * <dubbo:module name="dubboDemo" version="1.0.0" owner="max" />
  * @export
  */
 public class ModuleConfig extends AbstractConfig {

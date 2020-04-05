@@ -1450,6 +1450,13 @@ class URL implements Serializable {
         return buildKey(inf, getParameter(GROUP_KEY), getParameter(VERSION_KEY));
     }
 
+    /**
+     * group + / + path + : + version
+     * @param path
+     * @param group
+     * @param version
+     * @return
+     */
     public static String buildKey(String path, String group, String version) {
         return BaseServiceMetadata.buildServiceKey(path, group, version);
     }
@@ -1630,4 +1637,7 @@ class URL implements Serializable {
         subParameter.put(key, value);
     }
 
+    public static void main(String[] args) {
+        System.out.println(encode("hello/world")); // hello%2Fworld
+    }
 }

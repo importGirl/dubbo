@@ -23,7 +23,7 @@ import java.util.Arrays;
 
 /**
  * The service provider default configuration
- *
+ * 	<dubbo:provider retries="0" group="${dubbo.provider.group}" timeout="1000" protocol="dubbo" />
  * @export
  * @see org.apache.dubbo.config.ProtocolConfig
  * @see ServiceConfigBase

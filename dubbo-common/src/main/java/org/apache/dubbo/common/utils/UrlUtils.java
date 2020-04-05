@@ -64,6 +64,20 @@ public class UrlUtils {
      */
     private final static String URL_PARAM_STARTING_SYMBOL = "?";
 
+    /**
+     * 解析地址（address）到 URL对象中；defaults 可以获取对应key的默认值
+     * remote://root:alibaba@127.0.0.1:9090/dubbo.test.api ->
+     * protocol=remote
+     * username=root
+     * password=alibaba
+     * host=127.0.0.1
+     * port=9090
+     * path=/dubbo.test.api
+     *
+     * @param address
+     * @param defaults
+     * @return
+     */
     public static URL parseURL(String address, Map<String, String> defaults) {
         if (address == null || address.length() == 0) {
             return null;

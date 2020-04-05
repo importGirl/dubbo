@@ -29,6 +29,7 @@ import static org.apache.dubbo.config.Constants.REGISTRIES_SUFFIX;
 
 /**
  * RegistryConfig
+ * <dubbo:registry protocol="zookeeper" address="${dubbo.registry.address}" simplified="true" />
  *
  * @export
  */
@@ -206,6 +207,16 @@ public class RegistryConfig extends AbstractConfig {
         return address;
     }
 
+    /**
+     * 解析address;
+     * dubbo://admin:hello1234@10.20.130.230:20880/context/path?version=1.0.0&application=morgan
+     * username=admin
+     * password=hello1234
+     * protocol=dubbo
+     * port=20880
+     * parameters={version=1.0.0, application=morgan}
+     * @param address
+     */
     public void setAddress(String address) {
         this.address = address;
         if (address != null) {

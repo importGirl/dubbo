@@ -166,34 +166,47 @@ public class ConfigValidationUtils {
     private static final Pattern PATTERN_KEY = Pattern.compile("[*,\\-._0-9a-zA-Z]+");
 
 
+    /**
+     * 根据注册中心的地址（address)加载并创建URL
+     * @param interfaceConfig
+     * @param provider
+     * @return
+     */
     public static List<URL> loadRegistries(AbstractInterfaceConfig interfaceConfig, boolean provider) {
         // check && override if necessary
         List<URL> registryList = new ArrayList<URL>();
         ApplicationConfig application = interfaceConfig.getApplication();
-        List<RegistryConfig> registries = interfaceConfig.getRegistries();
+        List<RegistryConfig> registries = interfaceConfig.getRegistries(); // 注册中心列表
         if (CollectionUtils.isNotEmpty(registries)) {
             for (RegistryConfig config : registries) {
+                // 注册中心地址；
                 String address = config.getAddress();
                 if (StringUtils.isEmpty(address)) {
                     address = ANYHOST_VALUE;
                 }
+                // not N/A
                 if (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
                     Map<String, String> map = new HashMap<String, String>();
+                    // 移动application、config 的属性到 map
                     AbstractConfig.appendParameters(map, application);
                     AbstractConfig.appendParameters(map, config);
                     map.put(PATH_KEY, RegistryService.class.getName());
+                    // 运行时参数 到 map； dubboVersion、realease、timestamp、pId
                     AbstractInterfaceConfig.appendRuntimeParameters(map);
+                    // 协议
                     if (!map.containsKey(PROTOCOL_KEY)) {
                         map.put(PROTOCOL_KEY, DUBBO_PROTOCOL);
                     }
+                    // 解析地址（address)
                     List<URL> urls = UrlUtils.parseURLs(address, map);
 
                     for (URL url : urls) {
-
+                        // 创建一个新的 url对象
                         url = URLBuilder.from(url)
                                 .addParameter(REGISTRY_KEY, url.getProtocol())
                                 .setProtocol(extractRegistryType(url))
                                 .build();
+                        // 添加到列表 registryList
                         if ((provider && url.getParameter(REGISTER_KEY, true))
                                 || (!provider && url.getParameter(SUBSCRIBE_KEY, true))) {
                             registryList.add(url);
@@ -288,6 +301,10 @@ public class ConfigValidationUtils {
         }
     }
 
+    /**
+     * 检查config的各个属性配置
+     * @param config
+     */
     public static void validateAbstractInterfaceConfig(AbstractInterfaceConfig config) {
         checkName(LOCAL_KEY, config.getLocal());
         checkName("stub", config.getStub());
@@ -335,14 +352,21 @@ public class ConfigValidationUtils {
         }
     }
 
+    /**
+     * 检查 config 的各项属性配置
+     * @param config
+     */
     public static void validateReferenceConfig(ReferenceConfig config) {
+        // 检查是否有 extension
         checkMultiExtension(InvokerListener.class, "listener", config.getListener());
+        // 检查versionKey, groupKey， clientName 无非法的输入字符串
         checkKey(VERSION_KEY, config.getVersion());
         checkKey(GROUP_KEY, config.getGroup());
         checkName(CLIENT_KEY, config.getClient());
 
+        // 检查config各个属性的配置
         validateAbstractInterfaceConfig(config);
-
+        // 检查RegistryConfig 相关的属性配置
         List<RegistryConfig> registries = config.getRegistries();
         if (registries != null) {
             for (RegistryConfig registry : registries) {
@@ -350,6 +374,7 @@ public class ConfigValidationUtils {
             }
         }
 
+        // 检查consumerConfig; not null
         ConsumerConfig consumerConfig = config.getConsumer();
         if (consumerConfig != null) {
             validateConsumerConfig(consumerConfig);
@@ -468,6 +493,10 @@ public class ConfigValidationUtils {
         }
     }
 
+    /**
+     * 检查RegistryConfig 相关的属性配置
+     * @param config
+     */
     public static void validateRegistryConfig(RegistryConfig config) {
         checkName(PROTOCOL_KEY, config.getProtocol());
         checkName(USERNAME_KEY, config.getUsername());
@@ -511,12 +540,13 @@ public class ConfigValidationUtils {
     /**
      * Check whether there is a <code>Extension</code> who's name (property) is <code>value</code> (special treatment is
      * required)
-     *
+     * 检查是否有对应type和value的 ExtensionLoader;
      * @param type     The Extension type
      * @param property The extension key
      * @param value    The Extension name
      */
     public static void checkMultiExtension(Class<?> type, String property, String value) {
+        // 检查名称
         checkMultiName(property, value);
         if (StringUtils.isNotEmpty(value)) {
             String[] values = value.split("\\s*[,]+\\s*");

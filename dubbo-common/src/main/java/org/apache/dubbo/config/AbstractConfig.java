@@ -48,7 +48,7 @@ import static org.apache.dubbo.common.utils.ReflectUtils.findMethodByMethodSigna
 
 /**
  * Utility methods and public methods for parsing configuration
- *
+ * - id,prefix
  * @export
  */
 public abstract class AbstractConfig implements Serializable {
@@ -58,6 +58,7 @@ public abstract class AbstractConfig implements Serializable {
 
     /**
      * The legacy properties container
+     * 新老版本的 properties 的 key 映射
      */
     private static final Map<String, String> LEGACY_PROPERTIES = new HashMap<String, String>();
 
@@ -111,6 +112,15 @@ public abstract class AbstractConfig implements Serializable {
         appendParameters(parameters, config, null);
     }
 
+    /**
+     * 将config对象到属性复制到parameters中； 并给参数到key增加前缀；userName -> xxxPre.user.name
+     * - 驼峰命名转化； userName -> user.name
+     * - 未设置key, 则生成的key中有 '-'，替换为'.'
+     * - 允许重复值； key=value1,value2,
+     * @param parameters
+     * @param config
+     * @param prefix
+     */
     @SuppressWarnings("unchecked")
     public static void appendParameters(Map<String, String> parameters, Object config, String prefix) {
         if (config == null) {
@@ -127,31 +137,42 @@ public abstract class AbstractConfig implements Serializable {
                     }
                     String key;
                     if (parameter != null && parameter.key().length() > 0) {
+                        // @Parameter(key=xxx)
                         key = parameter.key();
                     } else {
+                        // userName -> user.name
                         key = calculatePropertyFromGetter(name);
                     }
                     Object value = method.invoke(config);
                     String str = String.valueOf(value).trim();
                     if (value != null && str.length() > 0) {
+                        // 对value转义; hello/world -> hello%2world
                         if (parameter != null && parameter.escaped()) {
                             str = URL.encode(str);
                         }
+                        // 拼接多个value情况； prefix.num=ONE,1,
                         if (parameter != null && parameter.append()) {
                             String pre = parameters.get(key);
                             if (pre != null && pre.length() > 0) {
                                 str = pre + "," + str;
                             }
                         }
+                        // 存在prefix; prefix.key.1
                         if (prefix != null && prefix.length() > 0) {
                             key = prefix + "." + key;
                         }
+                        // 保存到参数集合map中
                         parameters.put(key, str);
-                    } else if (parameter != null && parameter.required()) {
+                    }
+                    // value不存在， 抛异常
+                    else if (parameter != null && parameter.required()) {
                         throw new IllegalStateException(config.getClass().getSimpleName() + "." + key + " == null");
                     }
-                } else if (isParametersGetter(method)) {
+                }
+                // public Map getParameters() 方法
+                else if (isParametersGetter(method)) {
                     Map<String, String> map = (Map<String, String>) method.invoke(config, new Object[0]);
+                    // 给参数key增加前缀prefix
                     parameters.putAll(convert(map, prefix));
                 }
             } catch (Exception e) {
@@ -199,6 +220,11 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    /**
+     * methodCOnfig -> AsyncMethodInfo
+     * @param methodConfig
+     * @return
+     */
     protected static AsyncMethodInfo convertMethodConfig2AsyncInfo(MethodConfig methodConfig) {
         if (methodConfig == null || (methodConfig.getOninvoke() == null && methodConfig.getOnreturn() == null && methodConfig.getOnthrow() == null)) {
             return null;
@@ -302,6 +328,11 @@ public abstract class AbstractConfig implements Serializable {
         return null;
     }
 
+    /**
+     * 是否 public Map getParameters(){} 方法
+     * @param method
+     * @return
+     */
     private static boolean isParametersGetter(Method method) {
         String name = method.getName();
         return ("getParameters".equals(name)
@@ -310,6 +341,11 @@ public abstract class AbstractConfig implements Serializable {
                 && method.getReturnType() == Map.class);
     }
 
+    /**
+     * 是否 public void setParameters(Map map){} 方法
+     * @param method
+     * @return
+     */
     private static boolean isParametersSetter(Method method) {
         return ("setParameters".equals(method.getName())
                 && Modifier.isPublic(method.getModifiers())
@@ -318,6 +354,12 @@ public abstract class AbstractConfig implements Serializable {
                 && method.getReturnType() == void.class);
     }
 
+    /**
+     * 参数Map增加前缀 prefix; 如果参数key有'-'， 则替换为 '.'
+     * @param parameters
+     * @param prefix
+     * @return
+     */
     private static Map<String, String> convert(Map<String, String> parameters, String prefix) {
         if (parameters == null || parameters.isEmpty()) {
             return Collections.emptyMap();
@@ -352,31 +394,49 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    /**
+     *
+     * 读取注解配置(annotation)到对象中
+     * - 反射调用setFilter,setListener,setParameters,setInterface ...方法设值
+     *
+     * @param annotationClass
+     * @param annotation
+     */
     protected void appendAnnotation(Class<?> annotationClass, Object annotation) {
         Method[] methods = annotationClass.getMethods();
         for (Method method : methods) {
+            // annotationClass != Object; public void xxx(){}
             if (method.getDeclaringClass() != Object.class
                     && method.getReturnType() != void.class
                     && method.getParameterTypes().length == 0
                     && Modifier.isPublic(method.getModifiers())
                     && !Modifier.isStatic(method.getModifiers())) {
                 try {
+                    // method name
                     String property = method.getName();
+                    // interfaceClass,interfaceName = interface
                     if ("interfaceClass".equals(property) || "interfaceName".equals(property)) {
                         property = "interface";
                     }
+                    // interface -> setInterface
                     String setter = "set" + property.substring(0, 1).toUpperCase() + property.substring(1);
+                    // 执行方法
                     Object value = method.invoke(annotation);
                     if (value != null && !value.equals(method.getDefaultValue())) {
+                        // 返回包装类
                         Class<?> parameterType = ReflectUtils.getBoxedClass(method.getReturnType());
+                        // filter = {"f1, f2"}, listener={"l1","l2"} -> value=f1,f2, value=l1,l2
                         if ("filter".equals(property) || "listener".equals(property)) {
                             parameterType = String.class;
                             value = StringUtils.join((String[]) value, ",");
-                        } else if ("parameters".equals(property)) {
+                        }
+                        // parameters = {"k1", "v1", "k2", "v2"} -> { k1=v1, k2=v2 }
+                        else if ("parameters".equals(property)) {
                             parameterType = Map.class;
                             value = CollectionUtils.toStringMap((String[]) value);
                         }
                         try {
+                            // 调用对象的setXXX方法， 设置属性值； setFilter,setListener,setParameters,setInterface ...
                             Method setterMethod = getClass().getMethod(setter, parameterType);
                             setterMethod.invoke(this, value);
                         } catch (NoSuchMethodException e) {
@@ -454,6 +514,10 @@ public abstract class AbstractConfig implements Serializable {
         this.prefix = prefix;
     }
 
+    /**
+     * 刷新对象； 获取配置对象Configuration中的值, 并重新设置到对象中
+     * - 反射调用 setXXX， 重新设置一次值
+     */
     public void refresh() {
         Environment env = ApplicationModel.getEnvironment();
         try {
@@ -463,8 +527,10 @@ public abstract class AbstractConfig implements Serializable {
             for (Method method : methods) {
                 if (MethodUtils.isSetter(method)) {
                     try {
+                        // 获取配置对象Configuration中的值
                         String value = StringUtils.trim(compositeConfiguration.getString(extractPropertyName(getClass(), method)));
                         // isTypeMatch() is called to avoid duplicate and incorrect update, for example, we have two 'setGeneric' methods in ReferenceConfig.
+                        // 并重新设置到对象中
                         if (StringUtils.isNotEmpty(value) && ClassUtils.isTypeMatch(method.getParameterTypes()[0], value)) {
                             method.invoke(this, ClassUtils.convertPrimitive(method.getParameterTypes()[0], value));
                         }

@@ -38,6 +38,12 @@ import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATT
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.REMOVE_VALUE_PREFIX;
 
+/**
+ * 配置工具类
+ * - system envirnoment
+ * - system properties
+ * - dubbo.properties
+ */
 public class ConfigUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigUtils.class);
@@ -123,6 +129,12 @@ public class ConfigUtils {
         return names;
     }
 
+    /**
+     * 1${a.b.c}2${a.b.c}3 -> 1ABC2ABC3
+     * @param expression example: 1${a.b.c}2${a.b.c}3
+     * @param params     example: {a.b.c=ABC}
+     * @return           example: 1ABC2ABC3
+     */
     public static String replaceProperty(String expression, Map<String, String> params) {
         if (expression == null || expression.length() == 0 || expression.indexOf('$') < 0) {
             return expression;
@@ -144,17 +156,27 @@ public class ConfigUtils {
         return sb.toString();
     }
 
+    /**
+     *
+     * @return
+     */
     public static Properties getProperties() {
+        // 初始化
         if (PROPERTIES == null) {
             synchronized (ConfigUtils.class) {
                 if (PROPERTIES == null) {
+                    // 启动参数-Ddubbo.properties.file = dubbo.properties
                     String path = System.getProperty(CommonConstants.DUBBO_PROPERTIES_KEY);
+                    // 启动参数无配置
                     if (path == null || path.length() == 0) {
+                        // 环境env变量中获取
                         path = System.getenv(CommonConstants.DUBBO_PROPERTIES_KEY);
                         if (path == null || path.length() == 0) {
+                            // 使用默认值 dubbo.properties
                             path = CommonConstants.DEFAULT_DUBBO_PROPERTIES;
                         }
                     }
+                    // 加载dubbo.properties 文件的配置
                     PROPERTIES = ConfigUtils.loadProperties(path, false, true);
                 }
             }
@@ -172,6 +194,11 @@ public class ConfigUtils {
         }
     }
 
+    /**
+     * system properties -> properties file
+     * @param key
+     * @return
+     */
     public static String getProperty(String key) {
         return getProperty(key, null);
     }
@@ -187,6 +214,7 @@ public class ConfigUtils {
     }
 
     /**
+     * 获取property顺序:
      * System environment -> System properties
      *
      * @param key key
@@ -222,11 +250,12 @@ public class ConfigUtils {
      */
     public static Properties loadProperties(String fileName, boolean allowMultiFile, boolean optional) {
         Properties properties = new Properties();
-        // add scene judgement in windows environment Fix 2557
+        // add scene judgement in windows environment Fix 2557;1. properties 文件是否存在
         if (checkFileNameExist(fileName)) {
             try {
                 FileInputStream input = new FileInputStream(fileName);
                 try {
+                    // 加载properties文件
                     properties.load(input);
                 } finally {
                     input.close();
@@ -239,6 +268,7 @@ public class ConfigUtils {
 
         List<java.net.URL> list = new ArrayList<java.net.URL>();
         try {
+            // 2. 使用类加载器加载file
             Enumeration<java.net.URL> urls = ClassUtils.getClassLoader().getResources(fileName);
             list = new ArrayList<java.net.URL>();
             while (urls.hasMoreElements()) {
@@ -247,7 +277,7 @@ public class ConfigUtils {
         } catch (Throwable t) {
             logger.warn("Fail to load " + fileName + " file: " + t.getMessage(), t);
         }
-
+        // 3.empty 返回
         if (list.isEmpty()) {
             if (!optional) {
                 logger.warn("No " + fileName + " found on the class path.");
@@ -255,6 +285,7 @@ public class ConfigUtils {
             return properties;
         }
 
+        // 4.容错方法加载
         if (!allowMultiFile) {
             if (list.size() > 1) {
                 String errMsg = String.format("only 1 %s file is expected, but %d dubbo.properties files found on class path: %s",
@@ -273,6 +304,7 @@ public class ConfigUtils {
 
         logger.info("load " + fileName + " properties file from " + list);
 
+        // 5.使用 url 加载 properties
         for (java.net.URL url : list) {
             try {
                 Properties p = new Properties();

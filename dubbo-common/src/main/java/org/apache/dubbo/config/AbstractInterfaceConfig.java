@@ -175,6 +175,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     }
 
     /**
+     * 检查 Registry 并初始化
      * Check whether the registry config is exists, and then conversion it to {@link RegistryConfig}
      */
     public void checkRegistry() {
@@ -188,6 +189,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         }
     }
 
+    /**
+     * 运行时参数 dubboVersion、realease、timestamp、pId
+     * @param map
+     */
     public static void appendRuntimeParameters(Map<String, String> map) {
         map.put(DUBBO_VERSION_KEY, Version.getProtocolVersion());
         map.put(RELEASE_KEY, Version.getVersion());
@@ -198,6 +203,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     }
 
     /**
+     * 检查 <dubbo:interface/> 和 <dubbo:method />
+     * - interfaceClass 非空，并且是接口
+     * - methods方法集合是否都是interfaceClass中的方法
+     *
      * Check whether the remote service interface and the methods meet with Dubbo's requirements.it mainly check, if the
      * methods configured in the configuration file are included in the interface of remote service
      *
@@ -237,6 +246,8 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
 
     /**
+     * - 检查GreetingLocal3 是否为 Greet的子类（实现类）
+     * - 检查GreetingLocal3 构造器参数是否为  Greet 类型或其子类
      * Legitimacy check of stub, note that: the local will deprecated, and replace with <code>stub</code>
      *
      * @param interfaceClass for provider side, it is the {@link Class} of the service that will be exported; for consumer
@@ -251,11 +262,20 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     	if (ConfigUtils.isNotEmpty(className)) {
             Class<?> localClass = ConfigUtils.isDefault(className) ?
                     ReflectUtils.forName(interfaceClass.getName() + label) : ReflectUtils.forName(className);
+                        // 检查 localClass
                         verify(interfaceClass, localClass);
             }
     }
 
+
+    /**
+     * - 检查 interfaceClass 是否为 localClass 的父类
+     * - 检查localClass 是否有构造方法
+     * @param interfaceClass
+     * @param localClass
+     */
     private void verify(Class<?> interfaceClass, Class<?> localClass) {
+        // 父类.class.isAssignableFrom(子类.class)
         if (!interfaceClass.isAssignableFrom(localClass)) {
             throw new IllegalStateException("The local implementation class " + localClass.getName() +
                     " not implement interface " + interfaceClass.getName());
@@ -270,6 +290,9 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         }
     }
 
+    /**
+     * 通过registryIds 加载 初始化registies
+     */
     private void convertRegistryIdsToRegistries() {
         computeValidRegistryIds();
         if (StringUtils.isEmpty(registryIds)) {
@@ -310,6 +333,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     }
 
+    /**
+     *  从interfaceConfig 设置属性
+     * @param interfaceConfig
+     */
     public void completeCompoundConfigs(AbstractInterfaceConfig interfaceConfig) {
         if (interfaceConfig != null) {
             if (application == null) {

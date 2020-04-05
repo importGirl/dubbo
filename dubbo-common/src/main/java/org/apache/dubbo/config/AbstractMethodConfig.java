@@ -23,6 +23,11 @@ import java.util.Map;
 /**
  * AbstractMethodConfig
  *
+ * <dubbo:method name="" />;
+ *
+ * <dubbo:reference interface="com.xxx.XxxService">
+ *     <dubbo:method name="findXxx" timeout="3000" retries="2" />
+ * </dubbo:reference>
  * @export
  */
 public abstract class AbstractMethodConfig extends AbstractConfig {

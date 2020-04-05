@@ -23,7 +23,9 @@ import java.io.Serializable;
 
 /**
  * The method arguments configuration
- *
+ * <dubbo:method name="findXxx" timeout="3000" retries="2">
+ *     <dubbo:argument index="0" callback="true" />
+ * </dubbo:method>
  * @export
  */
 public class ArgumentConfig implements Serializable {
@@ -33,17 +35,17 @@ public class ArgumentConfig implements Serializable {
     /**
      * The argument index: index -1 represents not set
      */
-    private Integer index = -1;
+    private Integer index = -1; // 参数索引
 
     /**
      * Argument type
      */
-    private String type;
+    private String type; // 参数类型
 
     /**
      * Whether the argument is the callback interface
      */
-    private Boolean callback;
+    private Boolean callback; // 是否回调接口
 
     public ArgumentConfig() {
     }

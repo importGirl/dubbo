@@ -49,7 +49,12 @@ import static org.apache.dubbo.config.Constants.TEST_ENVIRONMENT;
 
 /**
  * The application info
+ * <dubbo:application name="application1" logger="slf4j" version="1.0.0" owner="max" organization="mcom"
+ *      architecture="china" environment="test" complier="javassist"
+ * >
  *
+ *     	<dubbo:parameter key="qos.enable" value="false" />
+ * </dubbo:application>
  * @export
  */
 public class ApplicationConfig extends AbstractConfig {
@@ -215,6 +220,10 @@ public class ApplicationConfig extends AbstractConfig {
         return environment;
     }
 
+    /**
+     * 只支持 test,develop,product配置
+     * @param environment
+     */
     public void setEnvironment(String environment) {
         if (environment != null) {
             if (!(DEVELOPMENT_ENVIRONMENT.equals(environment)
@@ -451,6 +460,12 @@ public class ApplicationConfig extends AbstractConfig {
         appendEnvironmentProperties();
     }
 
+    /**
+     * 参数
+     * 1. OS Environment: DUBBO_LABELS=tag=pre;key=value
+     * 2. JVM Options: -Denv_keys = DUBBO_KEY1, DUBBO_KEY2
+     *
+     */
     private void appendEnvironmentProperties() {
         if (parameters == null) {
             parameters = new HashMap<>();

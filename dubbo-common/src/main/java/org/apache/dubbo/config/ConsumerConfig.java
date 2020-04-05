@@ -20,7 +20,7 @@ import org.apache.dubbo.common.utils.StringUtils;
 
 /**
  * The service consumer default configuration
- *
+ * <dubbo:consumer timeout="1000" retries="0" check="false" />
  * @export
  */
 public class ConsumerConfig extends AbstractReferenceConfig {

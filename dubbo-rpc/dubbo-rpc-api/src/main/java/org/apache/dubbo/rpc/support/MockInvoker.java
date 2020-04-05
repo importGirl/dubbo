@@ -63,6 +63,13 @@ final public class MockInvoker<T> implements Invoker<T> {
         return parseMockValue(mock, null);
     }
 
+    /**
+     * 解析返回值
+     * @param mock
+     * @param returnTypes
+     * @return
+     * @throws Exception
+     */
     public static Object parseMockValue(String mock, Type[] returnTypes) throws Exception {
         Object value = null;
         if ("empty".equals(mock)) {

@@ -23,7 +23,7 @@ import org.apache.dubbo.rpc.Invoker;
 
 /**
  * The {@link ReferenceConfig Dubbo service ReferenceConfig} initialized {@link Event event}
- *
+ * ReferenceCOnfig初始化事件通知
  * @see Reference
  * @see ReferenceConfig#get()
  * @see Event

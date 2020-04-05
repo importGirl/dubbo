@@ -70,4 +70,14 @@ public class VersionTest {
         Assertions.assertFalse(Version.isRelease263OrHigher("2.6.1.1"));
         Assertions.assertTrue(Version.isRelease263OrHigher("2.6.3"));
     }
+
+    @Test
+    public void testGetVersion() {
+        String version = Version.getVersion();
+        String version2 = Version.getProtocolVersion();
+//        String version3 = Version.getVersion(Greeting.class, "1.1.1");
+        System.out.println(version);
+        System.out.println(version2);
+//        System.out.println(version3);
+    }
 }

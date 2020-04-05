@@ -180,6 +180,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         dispatch(new ReferenceConfigDestroyedEvent(this));
     }
 
+    /**
+     * 初始化
+     */
     public synchronized void init() {
         if (initialized) {
             return;
@@ -189,22 +192,24 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             bootstrap = DubboBootstrap.getInstance();
             bootstrap.init();
         }
-
+        // 同步consumer配置信息到 ReferenceConfig对象中; 并注册referenceConfig和检查各项配置
         checkAndUpdateSubConfigs();
-
+        // 检查 local、stub是否为interfaceClass的子类，
         checkStubAndLocal(interfaceClass);
+        // 检查mock数据
         ConfigValidationUtils.checkMock(interfaceClass, this);
 
         Map<String, String> map = new HashMap<String, String>();
         map.put(SIDE_KEY, CONSUMER_SIDE);
-
+        // 运行时参数
         ReferenceConfigBase.appendRuntimeParameters(map);
+        // 非泛化调用
         if (!ProtocolUtils.isGeneric(generic)) {
             String revision = Version.getVersion(interfaceClass, version);
             if (revision != null && revision.length() > 0) {
                 map.put(REVISION_KEY, revision);
             }
-
+            // 包装类方法集合
             String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
             if (methods.length == 0) {
                 logger.warn("No method found in service interface " + interfaceClass.getName());
@@ -214,6 +219,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             }
         }
         map.put(INTERFACE_KEY, interfaceName);
+        // 加载属性 metries,application,module,consumer,this, 到 map中
         AbstractConfig.appendParameters(map, getMetrics());
         AbstractConfig.appendParameters(map, getApplication());
         AbstractConfig.appendParameters(map, getModule());
@@ -221,6 +227,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         // appendParameters(map, consumer, Constants.DEFAULT_KEY);
         AbstractConfig.appendParameters(map, consumer);
         AbstractConfig.appendParameters(map, this);
+        // metaData-type 属性
         MetadataReportConfig metadataReportConfig = getMetadataReportConfig();
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
@@ -229,6 +236,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         if (CollectionUtils.isNotEmpty(getMethods())) {
             attributes = new HashMap<>();
             for (MethodConfig methodConfig : getMethods()) {
+                // 加载methodConfig 到 map中
                 AbstractConfig.appendParameters(map, methodConfig, methodConfig.getName());
                 String retryKey = methodConfig.getName() + ".retry";
                 if (map.containsKey(retryKey)) {
@@ -253,22 +261,29 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         }
         map.put(REGISTER_IP_KEY, hostToRegistry);
 
+        // 移动map到attachments
         serviceMetadata.getAttachments().putAll(map);
-
+        // 创建代理
         ref = createProxy(map);
 
         serviceMetadata.setTarget(ref);
         serviceMetadata.addAttribute(PROXY_CLASS_REF, ref);
+        // 创建 consumerModel
         ConsumerModel consumerModel = repository.lookupReferredService(serviceMetadata.getServiceKey());
         consumerModel.setProxyObject(ref);
         consumerModel.init(attributes);
 
         initialized = true;
 
-        // dispatch a ReferenceConfigInitializedEvent since 2.7.4
+        // dispatch a ReferenceConfigInitializedEvent since 2.7.4； ReferenceCOnfig初始化事件通知
         dispatch(new ReferenceConfigInitializedEvent(this, invoker));
     }
 
+    /**
+     * 创建 service 代理
+      * @param map
+     * @return
+     */
     @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
     private T createProxy(Map<String, String> map) {
         if (shouldJvmRefer(map)) {
@@ -369,23 +384,30 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     /**
      * This method should be called right after the creation of this class's instance, before any property in other config modules is used.
      * Check each config modules are created properly and override their properties if necessary.
+     * 同步consumer配置信息到 ReferenceConfig对象中; 并注册referenceConfig和检查各项配置
+     *
      */
     public void checkAndUpdateSubConfigs() {
         if (StringUtils.isEmpty(interfaceName)) {
             throw new IllegalStateException("<dubbo:reference interface=\"\" /> interface not allow null!");
         }
+        // 设置对象属性
         completeCompoundConfigs(consumer);
+        // 设置ReggistryIds
         if (consumer != null) {
             if (StringUtils.isEmpty(registryIds)) {
                 setRegistryIds(consumer.getRegistryIds());
             }
         }
-        // get consumer's global configuration
+        // get consumer's global configuration; 初始化consumer
         checkDefault();
+        // 刷新对象（referenceConfig)属性
         this.refresh();
+        // generic 泛化配置
         if (getGeneric() == null && getConsumer() != null) {
             setGeneric(getConsumer().getGeneric());
         }
+        // 设置泛化的 interfaceClass
         if (ProtocolUtils.isGeneric(generic)) {
             interfaceClass = GenericService.class;
         } else {
@@ -395,6 +417,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
+            // 检查 interfaceClass, 和methods
             checkInterfaceAndMethods(interfaceClass, getMethods());
         }
 
@@ -408,16 +431,20 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         serviceMetadata.setServiceKey(URL.buildKey(interfaceName, group, version));
 
         ServiceRepository repository = ApplicationModel.getServiceRepository();
+        // 注册interfaceClass
         ServiceDescriptor serviceDescriptor = repository.registerService(interfaceClass);
+        // 注册消费者
         repository.registerConsumer(
                 serviceMetadata.getServiceKey(),
                 serviceDescriptor,
                 this,
                 null,
                 serviceMetadata);
-
+        // 设置url
         resolveFile();
+        // 检查 config 的各项属性配置
         ConfigValidationUtils.validateReferenceConfig(this);
+        // 初始化后需要执行的逻辑
         postProcessConfig();
     }
 
@@ -465,6 +492,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         this.bootstrap = bootstrap;
     }
 
+    /**
+     * ReferenceConfig 初始化后执行的逻辑
+     */
     private void postProcessConfig() {
         List<ConfigPostProcessor> configPostProcessors =ExtensionLoader.getExtensionLoader(ConfigPostProcessor.class)
                 .getActivateExtension(URL.valueOf("configPostProcessor://"), (String[]) null);

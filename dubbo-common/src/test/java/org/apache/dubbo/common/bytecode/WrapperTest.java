@@ -31,7 +31,7 @@ public class WrapperTest {
         assertEquals(ns.length, 5);
         ns = w.getMethodNames();
         assertEquals(ns.length, 6);
-
+        System.out.println(w);
         Object obj = new Impl1();
         assertEquals(w.getPropertyValue(obj, "name"), "you name");
 

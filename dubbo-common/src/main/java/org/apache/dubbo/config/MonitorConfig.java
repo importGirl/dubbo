@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  * MonitorConfig
- *
+ * <dubbo:monitor protocol="zookeeper" address="10.20.130.230:12080"/>
  * @export
  */
 public class MonitorConfig extends AbstractConfig {

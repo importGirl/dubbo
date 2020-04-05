@@ -33,6 +33,7 @@ public class ServiceMetadata extends BaseServiceMetadata {
     private String defaultGroup;
     private Class<?> serviceType;
 
+    // 目标对象
     private Object target;
 
     /* will be transferred to remote side */

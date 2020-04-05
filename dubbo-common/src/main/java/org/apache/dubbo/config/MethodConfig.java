@@ -130,6 +130,10 @@ public class MethodConfig extends AbstractMethodConfig {
     public MethodConfig() {
     }
 
+    /**
+     * 根据注解method 创建 MethodConfig对象
+     * @param method
+     */
     public MethodConfig(Method method) {
         appendAnnotation(Method.class, method);
 
@@ -155,6 +159,11 @@ public class MethodConfig extends AbstractMethodConfig {
         }
     }
 
+    /**
+     * 根据多个注解对象（methods） 创建 MethodConfig列表
+     * @param methods
+     * @return
+     */
     public static List<MethodConfig> constructMethodConfig(Method[] methods) {
         if (methods != null && methods.length != 0) {
             List<MethodConfig> methodConfigs = new ArrayList<MethodConfig>(methods.length);

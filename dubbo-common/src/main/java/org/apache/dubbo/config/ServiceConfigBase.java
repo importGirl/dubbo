@@ -116,6 +116,11 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return providers;
     }
 
+    /**
+     * ProviderConfig -> ProtocolConfig
+     * @param provider
+     * @return
+     */
     @Deprecated
     private static ProtocolConfig convertProviderToProtocol(ProviderConfig provider) {
         ProtocolConfig protocol = new ProtocolConfig();
@@ -132,6 +137,11 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return protocol;
     }
 
+    /**
+     *
+     * @param protocol
+     * @return
+     */
     @Deprecated
     private static ProviderConfig convertProtocolToProvider(ProtocolConfig protocol) {
         ProviderConfig provider = new ProviderConfig();
@@ -226,6 +236,9 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         }
     }
 
+    /**
+     * protocolIds -> protocols , 并创建
+     */
     private void convertProtocolIdsToProtocols() {
         computeValidProtocolIds();
         if (StringUtils.isEmpty(protocolIds)) {
@@ -397,6 +410,10 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return DUBBO + ".service." + interfaceName;
     }
 
+    /**
+     * 返回唯一服务名称;  group + / + path + : + version
+     * @return
+     */
     @Parameter(excluded = true)
     public String getUniqueServiceName() {
         String group = StringUtils.isEmpty(this.group) ? provider.getGroup() : this.group;

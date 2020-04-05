@@ -195,6 +195,10 @@ public class NetUtils {
 
     private static volatile String HOST_ADDRESS;
 
+    /**
+     * 使用属性或者NetworkInterface 获取host
+     * @return
+     */
     public static String getLocalHost() {
         if (HOST_ADDRESS != null) {
             return HOST_ADDRESS;
@@ -265,6 +269,10 @@ public class NetUtils {
         return Optional.empty();
     }
 
+    /**
+     * NetworkInterface 获取host
+     * @return
+     */
     private static InetAddress getLocalAddress0() {
         InetAddress localAddress = null;
 

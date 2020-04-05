@@ -30,13 +30,14 @@ import java.util.Set;
 /**
  * ServiceModel and ServiceMetadata are to some extend duplicated with each other.
  * We should merge them in the future.
+ * 服务描述器
  */
 public class ServiceDescriptor {
     private final String serviceName;
     private final Class<?> serviceInterfaceClass;
     // to accelerate search
-    private final Map<String, List<MethodDescriptor>> methods = new HashMap<>();
-    private final Map<String, Map<String, MethodDescriptor>> descToMethods = new HashMap<>();
+    private final Map<String, List<MethodDescriptor>> methods = new HashMap<>();  // key::methodName =  value::overrideMehtods(重载方法列表)
+    private final Map<String, Map<String, MethodDescriptor>> descToMethods = new HashMap<>(); // key::methodName = value::{key::I[ZLjava/lang/Object;(参数描述) = value::方法描述器}
 
     public ServiceDescriptor(Class<?> interfaceClass) {
         this.serviceInterfaceClass = interfaceClass;
@@ -44,15 +45,19 @@ public class ServiceDescriptor {
         initMethods();
     }
 
+    /**
+     * 初始化服务的方法； methods、descToMethods
+     */
     private void initMethods() {
         Method[] methodsToExport = this.serviceInterfaceClass.getMethods();
+        // init methods
         for (Method method : methodsToExport) {
             method.setAccessible(true);
 
             List<MethodDescriptor> methodModels = methods.computeIfAbsent(method.getName(), (k) -> new ArrayList<>(1));
             methodModels.add(new MethodDescriptor(method));
         }
-
+        // init descToMethods
         methods.forEach((methodName, methodList) -> {
             Map<String, MethodDescriptor> descMap = descToMethods.computeIfAbsent(methodName, k -> new HashMap<>());
             methodList.forEach(methodModel -> descMap.put(methodModel.getParamDesc(), methodModel));
@@ -70,6 +75,10 @@ public class ServiceDescriptor {
         return serviceInterfaceClass;
     }
 
+    /**
+     * 返回服务下的全部方法
+     * @return
+     */
     public Set<MethodDescriptor> getAllMethods() {
         Set<MethodDescriptor> methodModels = new HashSet<>();
         methods.forEach((k, v) -> methodModels.addAll(v));
@@ -78,7 +87,7 @@ public class ServiceDescriptor {
 
     /**
      * Does not use Optional as return type to avoid potential performance decrease.
-     *
+     * 返回指定的方法描述器
      * @param methodName
      * @param params
      * @return
@@ -93,7 +102,7 @@ public class ServiceDescriptor {
 
     /**
      * Does not use Optional as return type to avoid potential performance decrease.
-     *
+     * 根据方法名、参数列表类型获取
      * @param methodName
      * @param paramTypes
      * @return
