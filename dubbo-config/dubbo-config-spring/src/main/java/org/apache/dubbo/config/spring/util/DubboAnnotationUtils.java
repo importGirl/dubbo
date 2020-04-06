@@ -60,21 +60,23 @@ public class DubboAnnotationUtils {
 
     /**
      * Resolve the interface name from {@link AnnotationAttributes}
-     *
+     * - 返回接口的名称
      * @param attributes            {@link AnnotationAttributes} instance, may be {@link Service @Service} or {@link Reference @Reference}
      * @param defaultInterfaceClass the default {@link Class class} of interface
      * @return the interface name if found
      * @throws IllegalStateException if interface name was not found
      */
     public static String resolveInterfaceName(AnnotationAttributes attributes, Class<?> defaultInterfaceClass) {
+        // 泛化调用
         Boolean generic = getAttribute(attributes, "generic");
         if (generic != null && generic) {
-            // it's a generic reference
+            // it's a generic reference； 接口名
             String interfaceClassName = getAttribute(attributes, "interfaceName");
             Assert.hasText(interfaceClassName,
                     "@Reference interfaceName() must be present when reference a generic service!");
             return interfaceClassName;
         }
+        // 返回
         return resolveServiceInterfaceClass(attributes, defaultInterfaceClass).getName();
     }
 
@@ -90,16 +92,17 @@ public class DubboAnnotationUtils {
     public static Class<?> resolveServiceInterfaceClass(AnnotationAttributes attributes, Class<?> defaultInterfaceClass)
             throws IllegalArgumentException {
 
+        // 类加载器
         ClassLoader classLoader = defaultInterfaceClass != null ? defaultInterfaceClass.getClassLoader() : Thread.currentThread().getContextClassLoader();
-
+        // interfaceClass
         Class<?> interfaceClass = getAttribute(attributes, "interfaceClass");
-
+        // 无
         if (void.class.equals(interfaceClass)) { // default or set void.class for purpose.
 
             interfaceClass = null;
-
+            // interfaceName
             String interfaceClassName = getAttribute(attributes, "interfaceName");
-
+            // 根据接口名和类加载器加载
             if (hasText(interfaceClassName)) {
                 if (ClassUtils.isPresent(interfaceClassName, classLoader)) {
                     interfaceClass = resolveClassName(interfaceClassName, classLoader);

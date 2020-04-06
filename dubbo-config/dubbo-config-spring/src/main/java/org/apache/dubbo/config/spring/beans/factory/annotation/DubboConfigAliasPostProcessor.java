@@ -59,6 +59,13 @@ public class DubboConfigAliasPostProcessor implements BeanDefinitionRegistryPost
         return bean;
     }
 
+    /**
+     * 注册别名
+     * @param bean
+     * @param beanName
+     * @return
+     * @throws BeansException
+     */
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if (bean instanceof AbstractConfig) {
@@ -66,6 +73,7 @@ public class DubboConfigAliasPostProcessor implements BeanDefinitionRegistryPost
             if (hasText(id)                                     // id MUST be present in AbstractConfig
                     && !nullSafeEquals(id, beanName)            // id MUST NOT be equal to bean name
                     && !hasAlias(registry, beanName, id)) {     // id MUST NOT be present in AliasRegistry
+                // beanName=id; applicationConfig=xxxapplication
                 registry.registerAlias(beanName, id);
             }
         }

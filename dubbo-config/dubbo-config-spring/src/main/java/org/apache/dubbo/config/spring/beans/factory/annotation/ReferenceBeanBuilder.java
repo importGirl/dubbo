@@ -56,6 +56,11 @@ class ReferenceBeanBuilder extends AnnotatedInterfaceConfigBeanBuilder<Reference
         super(attributes, applicationContext);
     }
 
+    /**
+     * 赋值 interface
+     * @param attributes
+     * @param referenceBean
+     */
     private void configureInterface(AnnotationAttributes attributes, ReferenceBean referenceBean) {
         Boolean generic = getAttribute(attributes, "generic");
         if (generic != null && generic) {
@@ -76,7 +81,11 @@ class ReferenceBeanBuilder extends AnnotatedInterfaceConfigBeanBuilder<Reference
 
     }
 
-
+    /**
+     * consumer 属性赋值
+     * @param attributes
+     * @param referenceBean
+     */
     private void configureConsumerConfig(AnnotationAttributes attributes, ReferenceBean<?> referenceBean) {
 
         String consumerBeanName = getAttribute(attributes, "consumer");
@@ -87,6 +96,11 @@ class ReferenceBeanBuilder extends AnnotatedInterfaceConfigBeanBuilder<Reference
 
     }
 
+    /**
+     * methods 属性赋值
+     * @param attributes
+     * @param referenceBean
+     */
     void configureMethodConfig(AnnotationAttributes attributes, ReferenceBean<?> referenceBean) {
         Method[] methods = (Method[]) attributes.get("methods");
         List<MethodConfig> methodConfigs = MethodConfig.constructMethodConfig(methods);
@@ -103,6 +117,7 @@ class ReferenceBeanBuilder extends AnnotatedInterfaceConfigBeanBuilder<Reference
     @Override
     protected void preConfigureBean(AnnotationAttributes attributes, ReferenceBean referenceBean) {
         Assert.notNull(interfaceClass, "The interface class must set first!");
+        // 包装成DataBinder
         DataBinder dataBinder = new DataBinder(referenceBean);
         // Register CustomEditors for special fields
         dataBinder.registerCustomEditor(String.class, "filter", new StringTrimmerEditor(true));
@@ -153,15 +168,15 @@ class ReferenceBeanBuilder extends AnnotatedInterfaceConfigBeanBuilder<Reference
 
     @Override
     protected void postConfigureBean(AnnotationAttributes attributes, ReferenceBean bean) throws Exception {
-
+        // 赋值 applicationCOntext
         bean.setApplicationContext(applicationContext);
-
+        // interface 属性赋值
         configureInterface(attributes, bean);
-
+        // consumer 属性赋值
         configureConsumerConfig(attributes, bean);
-
+        // methods 属性赋值
         configureMethodConfig(attributes, bean);
-
+        // 初始化方法； ReferenceConfig
         bean.afterPropertiesSet();
 
     }

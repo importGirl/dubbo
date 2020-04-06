@@ -16,25 +16,15 @@
  */
 package org.apache.dubbo.config.spring.schema;
 
+import com.alibaba.spring.util.AnnotatedBeanDefinitionRegistryUtils;
 import org.apache.dubbo.common.Version;
-import org.apache.dubbo.config.ApplicationConfig;
-import org.apache.dubbo.config.ConsumerConfig;
-import org.apache.dubbo.config.MetadataReportConfig;
-import org.apache.dubbo.config.MetricsConfig;
-import org.apache.dubbo.config.ModuleConfig;
-import org.apache.dubbo.config.MonitorConfig;
-import org.apache.dubbo.config.ProtocolConfig;
-import org.apache.dubbo.config.ProviderConfig;
-import org.apache.dubbo.config.RegistryConfig;
-import org.apache.dubbo.config.SslConfig;
+import org.apache.dubbo.config.*;
 import org.apache.dubbo.config.spring.ConfigCenterBean;
 import org.apache.dubbo.config.spring.ReferenceBean;
 import org.apache.dubbo.config.spring.ServiceBean;
 import org.apache.dubbo.config.spring.beans.factory.config.ConfigurableSourceBeanMetadataElement;
 import org.apache.dubbo.config.spring.context.DubboBootstrapApplicationListener;
 import org.apache.dubbo.config.spring.context.DubboLifecycleComponentApplicationListener;
-
-import com.alibaba.spring.util.AnnotatedBeanDefinitionRegistryUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
@@ -47,12 +37,14 @@ import static com.alibaba.spring.util.AnnotatedBeanDefinitionRegistryUtils.regis
 
 /**
  * DubboNamespaceHandler
+ * - 定义了 Dubbo 的 XML Namespace 的处理器 DubboNamespaceHandler 。
  *
  * @export
  */
 public class DubboNamespaceHandler extends NamespaceHandlerSupport implements ConfigurableSourceBeanMetadataElement {
 
     static {
+        // 检查 DubboNamespaceHandler 是否存在重复
         Version.checkDuplicate(DubboNamespaceHandler.class);
     }
 
@@ -84,17 +76,22 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
      */
     @Override
     public BeanDefinition parse(Element element, ParserContext parserContext) {
+        // Bean注册器
         BeanDefinitionRegistry registry = parserContext.getRegistry();
+        // 注册BeanPostProcessor
         registerAnnotationConfigProcessors(registry);
+        // 注册 Listener
         registerApplicationListeners(registry);
+        // 执行xml解析逻辑
         BeanDefinition beanDefinition = super.parse(element, parserContext);
+        // ?
         setSource(beanDefinition);
         return beanDefinition;
     }
 
     /**
      * Register {@link ApplicationListener ApplicationListeners} as a Spring Bean
-     *
+     * 注册 DubboLifecycleComponentApplicationListener， DubboBootstrapApplicationListener
      * @param registry {@link BeanDefinitionRegistry}
      * @see ApplicationListener
      * @see AnnotatedBeanDefinitionRegistryUtils#registerBeans(BeanDefinitionRegistry, Class[])
@@ -113,6 +110,7 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
      * @since 2.7.5
      */
     private void registerAnnotationConfigProcessors(BeanDefinitionRegistry registry) {
+        //分别注册了AutowiredAnnotationBeanPostProcessor、RequiredAnnotationBeanPostProcessor、CommonAnnotationBeanPostProcessor以及PersistenceAnnotationBeanPostProcessor这4个BeanPostProcessor
         AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);
     }
 }

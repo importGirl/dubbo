@@ -249,6 +249,11 @@ public final class Version {
         checkDuplicate(cls, false);
     }
 
+    /**
+     * 检查path 是否重复
+     * @param path
+     * @param failOnError
+     */
     public static void checkDuplicate(String path, boolean failOnError) {
         try {
             // search in caller's classloader

@@ -819,7 +819,7 @@ public final class StringUtils {
 
     /**
      * 用分隔符分割驼峰命名法
-     * 例子： userName -> user.name
+     * 例子： userName -> user + 'split' + name
      * @param camelName
      * @param split
      * @return

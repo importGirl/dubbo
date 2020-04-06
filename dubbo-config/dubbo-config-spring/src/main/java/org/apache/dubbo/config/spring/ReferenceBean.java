@@ -96,11 +96,17 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         beansOfTypeIncludingAncestors(applicationContext, SslConfig.class);
     }
 
+    /**
+     * 初始化方法
+     * - 预处理各个Config配置
+     * - ReferenceConfig#init(); 创建ReferenceConfig 对象
+     * @throws Exception
+     */
     @Override
     @SuppressWarnings({"unchecked"})
     public void afterPropertiesSet() throws Exception {
 
-        // Initializes Dubbo's Config Beans before @Reference bean autowiring
+        // Initializes Dubbo's Config Beans before @Reference bean autowiring； 预处理Dubbo配置
         prepareDubboConfigBeans();
 
         // lazy init by default.
@@ -108,7 +114,7 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
             init = false;
         }
 
-        // eager init if necessary.
+        // eager init if necessary.; 初始化 ReferenceConfig
         if (shouldInit()) {
             getObject();
         }

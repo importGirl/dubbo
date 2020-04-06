@@ -53,7 +53,9 @@ public class DubboConfigDefaultPropertyValueBeanPostProcessor extends GenericBea
 
     protected void processBeforeInitialization(AbstractConfig dubboConfigBean, String beanName) throws BeansException {
         // [Feature] https://github.com/apache/dubbo/issues/5721
+        // 设置id的默认值
         setBeanNameAsDefaultValue(dubboConfigBean, "id", beanName);
+        // 设置name的默认值
         setBeanNameAsDefaultValue(dubboConfigBean, "name", beanName);
     }
 
@@ -62,6 +64,12 @@ public class DubboConfigDefaultPropertyValueBeanPostProcessor extends GenericBea
         // DO NOTHING
     }
 
+    /**
+     * 设置bean对象propertyName的默认值
+     * @param bean
+     * @param propertyName
+     * @param beanName
+     */
     protected void setBeanNameAsDefaultValue(Object bean, String propertyName, String beanName) {
 
         Class<?> beanClass = getTargetClass(bean);

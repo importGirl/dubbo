@@ -106,6 +106,10 @@ public class ServiceBeanNameBuilder {
         return this;
     }
 
+    /**
+     * 返回 ServiceBean:UserService:1.0.0:local
+     * @return
+     */
     public String build() {
         StringBuilder beanNameBuilder = new StringBuilder("ServiceBean");
         // Required

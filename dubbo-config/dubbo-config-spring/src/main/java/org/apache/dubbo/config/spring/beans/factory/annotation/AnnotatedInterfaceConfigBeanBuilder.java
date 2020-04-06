@@ -68,16 +68,16 @@ public abstract class AnnotatedInterfaceConfigBeanBuilder<C extends AbstractInte
 
     /**
      * Build {@link C}
-     *
+     * - 加载各个config配置对象到 configBean
      * @return non-null
      * @throws Exception
      */
     public final C build() throws Exception {
-
+        // 空实现
         checkDependencies();
-
+        // 返回ReferenceBean 对象
         C configBean = doBuild();
-
+        // 加载 各个Config 对象到 configBean 对象中
         configureBean(configBean);
 
         if (logger.isInfoEnabled()) {
@@ -99,36 +99,48 @@ public abstract class AnnotatedInterfaceConfigBeanBuilder<C extends AbstractInte
      */
     protected abstract C doBuild();
 
-
+    /**
+     * 加载config
+     * @param configBean
+     * @throws Exception
+     */
     protected void configureBean(C configBean) throws Exception {
-
+        // 前处理
         preConfigureBean(attributes, configBean);
-
+        // 注册中心配置
         configureRegistryConfigs(configBean);
-
+        // MonitorConfig
         configureMonitorConfig(configBean);
 
         configureApplicationConfig(configBean);
 
         configureModuleConfig(configBean);
 
+        // 后处理； configBean 赋值
         postConfigureBean(attributes, configBean);
 
     }
 
     protected abstract void preConfigureBean(AnnotationAttributes attributes, C configBean) throws Exception;
 
-
+    /**
+     * Registry 配置
+     * @param configBean
+     */
     private void configureRegistryConfigs(C configBean) {
-
+        // 解析注册中心配置
         String[] registryConfigBeanIds = resolveRegistryConfigBeanNames(attributes);
-
+        // RegistryConfig 列表
         List<RegistryConfig> registryConfigs = getBeans(applicationContext, registryConfigBeanIds, RegistryConfig.class);
-
+        // 配置
         configBean.setRegistries(registryConfigs);
 
     }
 
+    /**
+     * Monitor 配置
+     * @param configBean
+     */
     private void configureMonitorConfig(C configBean) {
 
         String monitorBeanName = resolveMonitorConfigBeanName(attributes);
@@ -139,6 +151,10 @@ public abstract class AnnotatedInterfaceConfigBeanBuilder<C extends AbstractInte
 
     }
 
+    /**
+     * Application 配置
+     * @param configBean
+     */
     private void configureApplicationConfig(C configBean) {
 
         String applicationConfigBeanName = resolveApplicationConfigBeanName(attributes);
@@ -150,6 +166,10 @@ public abstract class AnnotatedInterfaceConfigBeanBuilder<C extends AbstractInte
 
     }
 
+    /**
+     * Module 配置
+     * @param configBean
+     */
     private void configureModuleConfig(C configBean) {
 
         String moduleConfigBeanName = resolveModuleConfigBeanName(attributes);

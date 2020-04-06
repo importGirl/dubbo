@@ -34,7 +34,7 @@ import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncl
 
 /**
  * A {@link ApplicationListener listener} for the {@link Lifecycle Dubbo Lifecycle} components
- *
+ * - LifeCycle 初始化与销毁的管理
  * @see {@link Lifecycle Dubbo Lifecycle}
  * @see SmartApplicationListener
  * @since 2.7.5
@@ -50,6 +50,10 @@ public class DubboLifecycleComponentApplicationListener extends OneTimeExecution
 
     private List<Lifecycle> lifecycleComponents = emptyList();
 
+    /**
+     * 监听启动与销毁
+     * @param event {@link ApplicationContextEvent}
+     */
     @Override
     protected void onApplicationContextEvent(ApplicationContextEvent event) {
         if (event instanceof ContextRefreshedEvent) {
@@ -59,15 +63,29 @@ public class DubboLifecycleComponentApplicationListener extends OneTimeExecution
         }
     }
 
+    /**
+     * 系统启动事件
+     * @param event
+     */
     protected void onContextRefreshedEvent(ContextRefreshedEvent event) {
+        // 获取 LifecycleList
         initLifecycleComponents(event);
+        // 调用 Lifecycle.start
         startLifecycleComponents();
     }
 
+    /**
+     * 系统销毁事件
+     * @param event
+     */
     protected void onContextClosedEvent(ContextClosedEvent event) {
         destroyLifecycleComponents();
     }
 
+    /**
+     * 初始化 Lifecyle 的实现类
+     * @param event
+     */
     private void initLifecycleComponents(ContextRefreshedEvent event) {
         ApplicationContext context = event.getApplicationContext();
         ClassLoader classLoader = context.getClassLoader();
